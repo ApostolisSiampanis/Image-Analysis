@@ -7,46 +7,49 @@ import torchvision.models as models
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 
-# Load and preprocess CIFAR-10 images
-transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
-])
 
-dataset = datasets.CIFAR10(root='./image_dataset/', train=True, download=True, transform=transform)
-data_loader = DataLoader(dataset, batch_size=1, shuffle=False)
+def load_dataset(transform):
+    """
+        Load CIFAR-10 dataset and preprocess the images
+    """
+    dataset_original = datasets.CIFAR10(root='./image_dataset/', train=True, download=True, transform=transform)
+    dataset = DataLoader(dataset_original, batch_size=1, shuffle=True)
+    print("Type of dataset: ", type(dataset))  # <class 'torch.utils.data.dataloader.DataLoader'>
+    # Convert the dataset to list
+    dataset = list(dataset)
+    dataset = dataset[:5000]
 
-print(len(dataset)) # 50000
+    # Get the first image and its label
+    image, label = dataset[0]
+    print("Image shape: ", image.shape)  # torch.Size([3, 32, 32])
+    print("Label: ", label)  # 6
 
-print("Type of dataset: ", type(dataset)) # <class 'torchvision.datasets.cifar.CIFAR10'>
+    # Display the first image
+    img_rgb = image.numpy().transpose((1, 2, 0))
+    plt.imshow(img_rgb)
+    plt.title(f"Label: {label}")
+    plt.show()
 
-# Convert the dataset to list
-dataset = list(dataset)
+    return dataset
 
-# shuffle the dataset
-random.shuffle(dataset)
 
-dataset = dataset[:5000]
+if __name__ == "__main__":
 
-print(len(dataset)) # 5000
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Resize((224, 224)),
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+    ])
 
-print(dataset[0])
+    print("Image Analysis")
+    dataset = load_dataset(transform)
 
-# Get the first image and its label
-image, label = dataset[4523]
-print("Image shape: ", image.shape) # torch.Size([3, 32, 32])
-print("Label: ", label) # 6
 
-img_rgb = image.numpy().transpose((1, 2, 0))
-plt.imshow(img_rgb)
-plt.title(f"Label: {label}")
-plt.show()
-
-# Load pre-trained ResNet-18 model
-model = models.resnet18(weights=models.resnet.ResNet18_Weights.IMAGENET1K_V1)
-# Change the output size for CIFAR-10 (10 classes)
-model.fc = nn.Linear(512, 10)
-# Remove the classification layer (the last layer)
-model = nn.Sequential(*list(model.children())[:-1])
-# Set the model to evaluation mode
-model.eval()
+# # Load pre-trained ResNet-18 model
+# model = models.resnet18(weights=models.resnet.ResNet18_Weights.IMAGENET1K_V1)
+# # Change the output size for CIFAR-10 (10 classes)
+# model.fc = nn.Linear(512, 10)
+# # Remove the classification layer (the last layer)
+# model = nn.Sequential(*list(model.children())[:-1])
+# # Set the model to evaluation mode
+# model.eval()
