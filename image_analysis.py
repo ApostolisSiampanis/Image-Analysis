@@ -11,7 +11,7 @@ def load_dataset(transforms):
         Load CIFAR-10 dataset and preprocess the images
     """
     dataset = CIFAR10(root='./image_dataset/', download=True, transform=transforms)
-    data_loader = DataLoader(dataset, batch_size=1, shuffle=True)
+    data_loader = DataLoader(dataset, batch_size=1)
 
     return data_loader
 
@@ -87,3 +87,15 @@ if __name__ == "__main__":
     # Load the pre-trained model
     model = pre_trained_model()
     print(model)
+
+    image_tensor = transform_pipeline(images[0])
+    print("Image tensor shape: ", image_tensor.shape)
+    print("Image tensor type: ", type(image_tensor))
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    features_var = model(image_tensor.unsqueeze(0).to(device))  # extract features
+
+    features = features_var.data # get the tensor out of the variable
+
+    print("Features size: ", features.size())
