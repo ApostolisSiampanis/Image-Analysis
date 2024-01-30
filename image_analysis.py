@@ -1,4 +1,6 @@
-from torchvision import transforms
+import torch
+from torch import nn
+from torchvision import transforms, models
 from torchvision.datasets import CIFAR10
 import matplotlib.pyplot as plt
 import pickle
@@ -15,19 +17,43 @@ def load_dataset():
 
     return images, labels
 
-def show_image(image):
+
+def pre_trained_model():
+    """
+        Load the pre-trained model
+    """
+    model_set = models.resnet18(weights='IMAGENET1K_V1')
+
+    # Freeze the parameters
+    for param in model_set.parameters():
+        param.requires_grad = False
+
+    # Pop the last layer
+    model_set.fc = nn.Identity()
+
+    # set processing device
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    model_set.to(device)
+
+    return model_set
+
+
+def show_image(display_image):
     """
         Display the image
     """
-    plt.imshow(image)
+    plt.imshow(display_image)
     plt.show()
 
-def unflatten_image(image):
+
+def unflatten_image(flattened_image):
     """
         Reshape the flattened image to its original shape
     """
     original_shape = (32, 32, 3)
-    return image.reshape(original_shape)
+    return flattened_image.reshape(original_shape)
+
 
 if __name__ == "__main__":
     print("Image Analysis: Final Exam")
@@ -41,8 +67,13 @@ if __name__ == "__main__":
 
     print("Shape of the image: ", images[0].shape)
     print("Type of the image: ", type(images[0]))
+    print(labels[0])
 
     # Reshape the flattened image to its original shape
     image = unflatten_image(images[154])
     show_image(image)
 
+    # Load the pre-trained model
+    model = pre_trained_model()
+
+    print(model)
