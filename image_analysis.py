@@ -1,22 +1,34 @@
+import numpy as np
 import torch
-from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import transforms, models
 from torchvision.datasets import CIFAR10
 import matplotlib.pyplot as plt
+from sklearn.metrics.pairwise import cosine_similarity
 
 
-def load_dataset(transforms):
+
+def load_dataset(transform, limit=1000, shuffle=True):
     """
-        Load CIFAR-10 dataset and preprocess the images
+    Load CIFAR-10 dataset and preprocess the images with a specified limit
     """
-    dataset = CIFAR10(root='./image_dataset/', download=True, transform=transforms)
+    dataset = CIFAR10(root='./image_dataset/', download=True, transform=transform)
+
+    # Limit the dataset to the specified number of samples
+    dataset.data = dataset.data[:limit]
+    dataset.targets = dataset.targets[:limit]
+
+    if shuffle:
+        # Shuffle the dataset
+        indices = np.arange(len(dataset))
+        np.random.shuffle(indices)
+        dataset.data = dataset.data[indices]
+        dataset.targets = np.array(dataset.targets)[indices].tolist()
+
     data_loader = DataLoader(dataset, batch_size=1)
-
     return data_loader
 
-
-def pre_trained_model():
+def load_pre_trained_model(select_device):
     """
         Load the pre-trained model
     """
@@ -36,10 +48,43 @@ def pre_trained_model():
     model_set = torch.nn.Sequential(*(list(model_set.children())[:-1]))
 
     # set processing device
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model_set.to(device)
+    model_set.to(select_device)
 
     return model_set
+
+
+def calculate_similarity(features_of_all_images):
+    """
+    Calculate the similarity scores between images based on the inverse Euclidean distance of their features.
+    """
+    similarity_scores_list = []
+    for i in range(len(features_of_all_images)):
+        scores = []
+        for j in range(i, len(features_of_all_images)):
+
+            distance = np.linalg.norm(features_of_all_images[i].cpu() - features_of_all_images[j].cpu()) + 0.00001
+            score = 1 / distance
+            scores.append((j, score))
+        similarity_scores_list.append(scores)
+    return similarity_scores_list
+
+
+def get_the_features_of_the_image(image, model):
+    image_tensor = transform_pipeline(image)
+    features_var = model(image_tensor.unsqueeze(0).to(device))  # extract features
+    features = features_var.data  # get the tensor out of the variable
+
+    # print("Features of the image: ", features.size())
+
+    return features
+
+
+def preview_image(image):
+    print("Shape of the image: ", image.shape)
+    print("Type of the image: ", type(image))
+    # Reshape the flattened image to its original shape
+    image = unflatten_image(image)
+    show_image(image)
 
 
 def show_image(display_image):
@@ -65,6 +110,9 @@ if __name__ == "__main__":
         transforms.ToTensor()
     ])
 
+    # Set the processing device
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
     # Load the CIFAR-10 dataset
     data_loader = load_dataset(transform_pipeline)
 
@@ -72,30 +120,25 @@ if __name__ == "__main__":
     images = data_loader.dataset.data
     labels = data_loader.dataset.targets
 
-    print("Number of images in the dataset: ", len(images))
-
-    print("Shape of the image: ", images[0].shape)
-    print("Type of the image: ", type(images[0]))
-    print(labels[0])
-
-    print("Image transform: ", images[0])
-
-    # Reshape the flattened image to its original shape
-    image = unflatten_image(images[0])
-    show_image(image)
+    # Preview the image
+    preview_image(images[0])
 
     # Load the pre-trained model
-    model = pre_trained_model()
-    print(model)
+    pre_trained_model = load_pre_trained_model(device)
+    print(pre_trained_model)
 
-    image_tensor = transform_pipeline(images[0])
-    print("Image tensor shape: ", image_tensor.shape)
-    print("Image tensor type: ", type(image_tensor))
+    # Get all the features of the images
+    features = []
+    for image in images:
+        features.append(get_the_features_of_the_image(image, pre_trained_model))
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # Make them 1D
+    for i in range(len(features)):
+        features[i] = features[i].view(features[i].size(0), -1)
 
-    features_var = model(image_tensor.unsqueeze(0).to(device))  # extract features
+    # Calculate the Euclidean distance between the features of an image and the features of all images and store the
+    # similarity scores
+    similarity_scores = calculate_similarity(features)
 
-    features = features_var.data # get the tensor out of the variable
-
-    print("Features size: ", features.size())
+    print(similarity_scores[0])
+    print("Length of the euclidean distances: ", len(similarity_scores))
