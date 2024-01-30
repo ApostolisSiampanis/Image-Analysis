@@ -1,55 +1,48 @@
-import random
-import torch
-import torch.nn as nn
-import torchvision.transforms as transforms
-import torchvision.datasets as datasets
-import torchvision.models as models
+from torchvision import transforms
+from torchvision.datasets import CIFAR10
 import matplotlib.pyplot as plt
-from torch.utils.data import DataLoader
+import pickle
 
 
-def load_dataset(transform):
+def load_dataset():
     """
         Load CIFAR-10 dataset and preprocess the images
     """
-    dataset_original = datasets.CIFAR10(root='./image_dataset/', train=True, download=True, transform=transform)
-    dataset = DataLoader(dataset_original, batch_size=1, shuffle=True)
-    print("Type of dataset: ", type(dataset))  # <class 'torch.utils.data.dataloader.DataLoader'>
-    # Convert the dataset to list
-    dataset = list(dataset)
-    dataset = dataset[:5000]
+    dataset = CIFAR10(root='./image_dataset/', download=True)
 
-    # Get the first image and its label
-    image, label = dataset[0]
-    print("Image shape: ", image.shape)  # torch.Size([3, 32, 32])
-    print("Label: ", label)  # 6
+    images = dataset.data
+    labels = dataset.targets
 
-    # Display the first image
-    img_rgb = image.numpy().transpose((1, 2, 0))
-    plt.imshow(img_rgb)
-    plt.title(f"Label: {label}")
+    return images, labels
+
+def show_image(image):
+    """
+        Display the image
+    """
+    plt.imshow(image)
     plt.show()
 
-    return dataset
-
+def unflatten_image(image):
+    """
+        Reshape the flattened image to its original shape
+    """
+    original_shape = (32, 32, 3)
+    return image.reshape(original_shape)
 
 if __name__ == "__main__":
+    print("Image Analysis: Final Exam")
 
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Resize((224, 224)),
-        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+    transforms = transforms.Compose([
+        transforms.ToTensor()
     ])
 
-    print("Image Analysis")
-    dataset = load_dataset(transform)
+    images, labels = load_dataset()
+    print("Number of images in the dataset: ", len(images))
 
+    print("Shape of the image: ", images[0].shape)
+    print("Type of the image: ", type(images[0]))
 
-# # Load pre-trained ResNet-18 model
-# model = models.resnet18(weights=models.resnet.ResNet18_Weights.IMAGENET1K_V1)
-# # Change the output size for CIFAR-10 (10 classes)
-# model.fc = nn.Linear(512, 10)
-# # Remove the classification layer (the last layer)
-# model = nn.Sequential(*list(model.children())[:-1])
-# # Set the model to evaluation mode
-# model.eval()
+    # Reshape the flattened image to its original shape
+    image = unflatten_image(images[154])
+    show_image(image)
+
