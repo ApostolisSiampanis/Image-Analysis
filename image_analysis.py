@@ -3,7 +3,6 @@ from torch import nn
 from torchvision import transforms, models
 from torchvision.datasets import CIFAR10
 import matplotlib.pyplot as plt
-import pickle
 
 
 def load_dataset():
@@ -28,12 +27,11 @@ def pre_trained_model():
     for param in model_set.parameters():
         param.requires_grad = False
 
-    # Pop the last layer
-    model_set.fc = nn.Identity()
+    # Replace the last fully-connected layer
+    model_set.fc = nn.Linear(model_set.fc.in_features, 10)  # 10 classes in CIFAR-10
 
     # set processing device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
     model_set.to(device)
 
     return model_set
@@ -58,7 +56,7 @@ def unflatten_image(flattened_image):
 if __name__ == "__main__":
     print("Image Analysis: Final Exam")
 
-    transforms = transforms.Compose([
+    transform_pipeline = transforms.Compose([
         transforms.ToTensor()
     ])
 
