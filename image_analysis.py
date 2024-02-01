@@ -52,7 +52,7 @@ def calculate_similarity(features_of_all_images):
     for i in range(len(features_of_all_images)):
         scores = []
         for j in range(len(features_of_all_images)):
-            distance = np.linalg.norm(features_of_all_images[i].cpu() - features_of_all_images[j].cpu())
+            distance = np.linalg.norm(features_of_all_images[i] - features_of_all_images[j])
             if distance == 0:
                 score = 1
             else:
@@ -93,30 +93,6 @@ def get_the_features_of_the_image(image, model):
     return features
 
 
-def preview_image(image):
-    print("Shape of the image: ", image.shape)
-    print("Type of the image: ", type(image))
-    # Reshape the flattened image to its original shape
-    image = unflatten_image(image)
-    show_image(image)
-
-
-def show_image(display_image):
-    """
-        Display the image
-    """
-    plt.imshow(display_image)
-    plt.show()
-
-
-def unflatten_image(flattened_image):
-    """
-        Reshape the flattened image to its original shape
-    """
-    original_shape = (32, 32, 3)
-    return flattened_image.reshape(original_shape)
-
-
 if __name__ == "__main__":
     print("Image Analysis: Final Exam")
 
@@ -130,25 +106,41 @@ if __name__ == "__main__":
     # Load the Stanford Dogs dataset
     data_loader = load_dataset(transform_pipeline)
 
-    # # Get the images and labels from the dataset
-    # images = data_loader.dataset.data
-    # labels = data_loader.dataset.targets
-    #
-    # # Preview the image
-    # preview_image(images[0])
-
     # Load the pre-trained model
     pre_trained_model = load_pre_trained_model(device)
     # print(pre_trained_model)
-#------------------------------TO FIX------------------------------#
+
+    # Get the first image from the dataset
+    first_image, _ = next(iter(data_loader))
+
+    # Convert the image tensor to a numpy array
+    first_image = first_image.squeeze().permute(1, 2, 0).numpy()
+
+    # Display the first image
+    plt.imshow(first_image)
+    plt.axis('off')
+    plt.show()
+
     # Get all the features of the images
     features = []
-    for image in images:
-        features.append(get_the_features_of_the_image(image, pre_trained_model))
+    for image, _ in data_loader:
+        # Add batch dimension to image tensor
+        image = image.unsqueeze(0)
+
+        # Move the image tensor to the same device as the pre-trained model
+        image = image.to(device)
+
+        # Pass the image through the ResNet18 model
+        with torch.no_grad():
+            feature = pre_trained_model(image).squeeze().cpu().numpy()  # Convert feature to numpy array
+
+        # Append the feature vector to the list of features
+        features.append(feature)
 
     # Make them 1D
     for i in range(len(features)):
-        features[i] = features[i].view(features[i].size(0), -1)
+        features[i] = features[i].reshape(features[i].size)
+
 
     # Calculate the Euclidean distance between the features of an image and the features of all images and store the
     # similarity scores
