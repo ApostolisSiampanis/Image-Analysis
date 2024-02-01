@@ -1,11 +1,11 @@
-import numpy as np
 import torch
+import numpy as np
 from torch.utils.data import DataLoader
 from torchvision import transforms, models
 from torchvision.datasets import CIFAR10
+import numpy as np
+import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics.pairwise import cosine_similarity
-
 
 
 def load_dataset(transform, limit=1000, shuffle=True):
@@ -27,6 +27,7 @@ def load_dataset(transform, limit=1000, shuffle=True):
 
     data_loader = DataLoader(dataset, batch_size=1)
     return data_loader
+
 
 def load_pre_trained_model(select_device):
     """
@@ -61,18 +62,40 @@ def calculate_similarity(features_of_all_images):
     for i in range(len(features_of_all_images)):
         scores = []
         for j in range(i, len(features_of_all_images)):
-
-            distance = np.linalg.norm(features_of_all_images[i].cpu() - features_of_all_images[j].cpu()) + 0.00001
-            score = 1 / distance
+            distance = np.linalg.norm(features_of_all_images[i].cpu() - features_of_all_images[j].cpu())
+            if distance == 0:
+                score = 1
+            else:
+                score = 1 / distance
             scores.append((j, score))
         similarity_scores_list.append(scores)
     return similarity_scores_list
 
 
+def rank_normalization(similarity_lists):
+    """
+    Rank normalization of the similarity scores
+    :param similarity_lists:
+    :return:
+    """
+
+    normalized_similarity_scores = []
+    L = len(similarity_lists[0])  # Length of each similarity list
+
+    for i in range(len(similarity_lists)):
+        ranks = []
+        for j in range(len(similarity_lists[i])):
+            rank = 2 * L - (similarity_lists[i][j][1] + similarity_lists[j][i][1])
+            ranks.append((j, rank))  # Append a tuple instead of a list
+        normalized_similarity_scores.append(sorted(ranks))
+
+    return normalized_similarity_scores
+
+
 def get_the_features_of_the_image(image, model):
     image_tensor = transform_pipeline(image)
     features_var = model(image_tensor.unsqueeze(0).to(device))  # extract features
-    features = features_var.data  # get the tensor out of the variable
+    features = features_var.data.cpu()  # get the tensor out of the variable and copy it to host memory
 
     # print("Features of the image: ", features.size())
 
@@ -125,7 +148,7 @@ if __name__ == "__main__":
 
     # Load the pre-trained model
     pre_trained_model = load_pre_trained_model(device)
-    print(pre_trained_model)
+    # print(pre_trained_model)
 
     # Get all the features of the images
     features = []
@@ -142,3 +165,7 @@ if __name__ == "__main__":
 
     print(similarity_scores[0])
     print("Length of the euclidean distances: ", len(similarity_scores))
+
+    # Rank normalization of the similarity scores
+    normalized_similarity_scores = rank_normalization(similarity_scores)
+    print(normalized_similarity_scores[0])
