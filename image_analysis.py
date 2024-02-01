@@ -1,32 +1,25 @@
-import torch
+import matplotlib.pyplot as plt
 import numpy as np
+import random
+import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms, models
-from torchvision.datasets import CIFAR10
-import numpy as np
-import numpy as np
-import matplotlib.pyplot as plt
+from torchvision.datasets import ImageFolder
 
 
 def load_dataset(transform, limit=1000, shuffle=True):
     """
-    Load CIFAR-10 dataset and preprocess the images with a specified limit
+    Load Stanford Dogs dataset and preprocess the images with a specified limit
+    http://vision.stanford.edu/aditya86/ImageNetDogs/
     """
-    dataset = CIFAR10(root='./image_dataset/', download=True, transform=transform)
-
-    # Limit the dataset to the specified number of samples
-    dataset.data = dataset.data[:limit]
-    dataset.targets = dataset.targets[:limit]
-
+    dataset = ImageFolder('images_dataset', transform=transform)
     if shuffle:
-        # Shuffle the dataset
-        indices = np.arange(len(dataset))
-        np.random.shuffle(indices)
-        dataset.data = dataset.data[indices]
-        dataset.targets = np.array(dataset.targets)[indices].tolist()
+        sample_list_index = random.sample(range(len(dataset)), limit)
+        dataset = torch.utils.data.Subset(dataset, sample_list_index)
+    else:
+        dataset = torch.utils.data.Subset(dataset, range(limit))
 
-    data_loader = DataLoader(dataset, batch_size=1)
-    return data_loader
+    return dataset
 
 
 def load_pre_trained_model(select_device):
@@ -41,9 +34,6 @@ def load_pre_trained_model(select_device):
     # Freeze the parameters
     for param in model_set.parameters():
         param.requires_grad = False
-
-    # # Replace the last fully-connected layer
-    # model_set.fc = nn.Linear(model_set.fc.in_features, 10)  # 10 classes in CIFAR-10
 
     # Remove the classification (fully connected) layer
     model_set = torch.nn.Sequential(*(list(model_set.children())[:-1]))
@@ -61,7 +51,7 @@ def calculate_similarity(features_of_all_images):
     similarity_scores_list = []
     for i in range(len(features_of_all_images)):
         scores = []
-        for j in range(i, len(features_of_all_images)):
+        for j in range(len(features_of_all_images)):
             distance = np.linalg.norm(features_of_all_images[i].cpu() - features_of_all_images[j].cpu())
             if distance == 0:
                 score = 1
@@ -87,7 +77,8 @@ def rank_normalization(similarity_lists):
         for j in range(len(similarity_lists[i])):
             rank = 2 * L - (similarity_lists[i][j][1] + similarity_lists[j][i][1])
             ranks.append((j, rank))  # Append a tuple instead of a list
-        normalized_similarity_scores.append(sorted(ranks))
+        # append the sorted ranks, based on the rank (the second value of the tuple) to the normalized_similarity_scores list
+        normalized_similarity_scores.append(sorted(ranks, key=lambda x: x[1]))
 
     return normalized_similarity_scores
 
@@ -136,20 +127,20 @@ if __name__ == "__main__":
     # Set the processing device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    # Load the CIFAR-10 dataset
+    # Load the Stanford Dogs dataset
     data_loader = load_dataset(transform_pipeline)
 
-    # Get the images and labels from the dataset
-    images = data_loader.dataset.data
-    labels = data_loader.dataset.targets
-
-    # Preview the image
-    preview_image(images[0])
+    # # Get the images and labels from the dataset
+    # images = data_loader.dataset.data
+    # labels = data_loader.dataset.targets
+    #
+    # # Preview the image
+    # preview_image(images[0])
 
     # Load the pre-trained model
     pre_trained_model = load_pre_trained_model(device)
     # print(pre_trained_model)
-
+#------------------------------TO FIX------------------------------#
     # Get all the features of the images
     features = []
     for image in images:
