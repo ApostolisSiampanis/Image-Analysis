@@ -101,7 +101,7 @@ if __name__ == "__main__":
     ])
 
     # Set the processing device
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     # Load the Stanford Dogs dataset
     data_loader = load_dataset(transform_pipeline)
