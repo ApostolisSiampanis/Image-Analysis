@@ -7,7 +7,7 @@ from torchvision import transforms, models
 from torchvision.datasets import ImageFolder
 
 
-def load_dataset(transform, limit=1000, shuffle=True):
+def load_dataset(transform, limit=200, shuffle=True):
     """
     Load Stanford Dogs dataset and preprocess the images with a specified limit
     http://vision.stanford.edu/aditya86/ImageNetDogs/
@@ -47,6 +47,7 @@ def load_pre_trained_model(select_device):
 def calculate_similarity(features_of_all_images):
     """
     Calculate the similarity scores between images based on the inverse Euclidean distance of their features.
+    Similarity score = 1 / (Euclidean distance)
     """
     similarity_scores_list = []
     for i in range(len(features_of_all_images)):
@@ -77,7 +78,7 @@ def rank_normalization(similarity_lists):
         for j in range(len(similarity_lists[i])):
             rank = 2 * L - (similarity_lists[i][j][1] + similarity_lists[j][i][1])
             ranks.append((j, rank))  # Append a tuple instead of a list
-        # append the sorted ranks, based on the rank (the second value of the tuple) to the normalized_similarity_scores list
+        # sort the ranks based on the rank (the second value of the tuple) and append to the normalized_similarity_scores list
         normalized_similarity_scores.append(sorted(ranks, key=lambda x: x[1]))
 
     return normalized_similarity_scores
@@ -91,6 +92,32 @@ def get_the_features_of_the_image(image, model):
     # print("Features of the image: ", features.size())
 
     return features
+
+
+def get_hypergraph_construction(similarity_scores, k=9):
+    hypergraph = []
+    for i in range(len(similarity_scores)):
+        hyperedge = []
+        for j in range(k):
+            # Check if the similarity score is greater than the threshold
+            if j <= k:
+                # If it is, add the node to the hyperedge
+                hyperedge.append(similarity_scores[i][j][0])
+            else:
+                break
+        # Add the hyperedge to the hypergraph
+        hypergraph.append(hyperedge)
+    return hypergraph
+
+
+def create_edge_association(hypergraph, similarity_scores):
+    edge_association = {}
+    for i in range(len(hypergraph)):
+        for node in hypergraph[i]:
+            if node not in edge_association:
+                edge_association[node] = []
+            edge_association[node].append((i, similarity_scores[i][node][1]))  # Append the edge index and weight
+    return edge_association
 
 
 if __name__ == "__main__":
@@ -141,7 +168,6 @@ if __name__ == "__main__":
     for i in range(len(features)):
         features[i] = features[i].reshape(features[i].size)
 
-
     # Calculate the Euclidean distance between the features of an image and the features of all images and store the
     # similarity scores
     similarity_scores = calculate_similarity(features)
@@ -152,3 +178,10 @@ if __name__ == "__main__":
     # Rank normalization of the similarity scores
     normalized_similarity_scores = rank_normalization(similarity_scores)
     print(normalized_similarity_scores[0])
+
+    # Get the Hypergraph
+    hypergragh = get_hypergraph_construction(normalized_similarity_scores)
+    print(hypergragh[0])
+
+    edge_association = create_edge_association(hypergragh, normalized_similarity_scores)
+    print(edge_association[0])
