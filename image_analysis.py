@@ -26,7 +26,7 @@ def load_pre_trained_model(select_device):
     """
         Load the pre-trained model
     """
-    model_set = models.resnet18(weights='IMAGENET1K_V1')
+    model_set = models.resnet50(weights='IMAGENET1K_V1')
 
     # Set the model to evaluation mode to avoid updating the running statistics of batch normalization layers
     model_set.eval()
@@ -95,29 +95,32 @@ def get_the_features_of_the_image(image, model):
 
 
 def get_hypergraph_construction(similarity_scores, k=9):
-    hypergraph = []
+    hyperedges = []
     for i in range(len(similarity_scores)):
         hyperedge = []
         for j in range(k):
-            # Check if the similarity score is greater than the threshold
-            if j <= k:
-                # If it is, add the node to the hyperedge
-                hyperedge.append(similarity_scores[i][j][0])
+            # If it is, add the node to the hyperedge
+            hyperedge.append(similarity_scores[i][j][0])
+        # Add the hyperedge to the hyperedges
+        hyperedges.append(hyperedge)
+    return hyperedges
+
+
+def create_edge_association(hyperedges, k=9):
+    weights = []
+    for e in hyperedges:
+        associations = np.zeros((len(hyperedges)))
+        for j in range(len(hyperedges)):
+            if j in e:
+                position = e.index(j)+1 # Get the position of the node in the hyperedge
+                associations[j] = 1 - np.math.log(position, k+1) # Calculate the weight
             else:
-                break
-        # Add the hyperedge to the hypergraph
-        hypergraph.append(hyperedge)
-    return hypergraph
-
-
-def create_edge_association(hypergraph, similarity_scores):
-    edge_association = {}
-    for i in range(len(hypergraph)):
-        for node in hypergraph[i]:
-            if node not in edge_association:
-                edge_association[node] = []
-            edge_association[node].append((i, similarity_scores[i][node][1]))  # Append the edge index and weight
-    return edge_association
+                associations[j] = 0
+        sum = 0
+        for h in e:
+            sum += associations[h]
+        weights.append(sum)
+    return weights
 
 
 if __name__ == "__main__":
@@ -179,9 +182,9 @@ if __name__ == "__main__":
     normalized_similarity_scores = rank_normalization(similarity_scores)
     print(normalized_similarity_scores[0])
 
-    # Get the Hypergraph
-    hypergragh = get_hypergraph_construction(normalized_similarity_scores)
-    print(hypergragh[0])
+    # Get the Hyperedges
+    hyperedges = get_hypergraph_construction(normalized_similarity_scores)
+    print(hyperedges[0])
 
-    edge_association = create_edge_association(hypergragh, normalized_similarity_scores)
+    edge_association = create_edge_association(hyperedges)
     print(edge_association[0])
