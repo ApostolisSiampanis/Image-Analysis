@@ -107,18 +107,22 @@ def get_hypergraph_construction(similarity_scores, k=9):
 
 
 def create_edge_association(hyperedges, k=9):
-    weights = []
-    for e in hyperedges:
-        associations = np.zeros((len(hyperedges)))
+    associations = np.zeros((len(hyperedges),len(hyperedges)))
+    for i,e in enumerate(hyperedges):
         for j in range(len(hyperedges)):
             if j in e:
                 position = e.index(j)+1 # Get the position of the node in the hyperedge
-                associations[j] = 1 - np.math.log(position, k+1) # Calculate the weight
+                associations[i][j] = 1 - np.math.log(position, k+1) # Calculate the weight
             else:
-                associations[j] = 0
+                associations[i][j] = 0
+    return associations
+
+def create_edge_weights(hyperedges, edge_associations):
+    weights = []
+    for i,e in enumerate(hyperedges):
         sum = 0
         for h in e:
-            sum += associations[h]
+            sum += edge_associations[i][h]
         weights.append(sum)
     return weights
 
@@ -186,5 +190,8 @@ if __name__ == "__main__":
     hyperedges = get_hypergraph_construction(normalized_similarity_scores)
     print(hyperedges[0])
 
-    edge_association = create_edge_association(hyperedges)
-    print(edge_association[0])
+    edge_associations = create_edge_association(hyperedges)
+    print(edge_associations[0])
+
+    edge_weights = create_edge_weights(hyperedges, edge_associations)
+    print(edge_weights[0])
