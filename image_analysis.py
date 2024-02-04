@@ -149,6 +149,11 @@ def get_cartesian_product_of_hyperedge_elements(edge_weights, edge_associations,
     return matrix_c
 
 
+def get_hypergrapgh_based_simalarity(matrix_c, hyperedges_similarities):
+    affinity_matrix = np.multiply(matrix_c, hyperedges_similarities)
+    return affinity_matrix
+
+
 if __name__ == "__main__":
     print("Image Analysis: Final Exam")
 
@@ -197,6 +202,8 @@ if __name__ == "__main__":
     for i in range(len(features)):
         features[i] = features[i].reshape(features[i].size)
 
+    # ---LHRR Alogrithm---
+
     # Calculate the Euclidean distance between the features of an image and the features of all images and store the
     # similarity scores
     similarity_scores = calculate_similarity(features)
@@ -222,3 +229,5 @@ if __name__ == "__main__":
     print(hyperedges_similarities)
 
     matrix_c = get_cartesian_product_of_hyperedge_elements(edge_weights, edge_associations, hyperedges)
+
+    affinity_matrix = get_hypergrapgh_based_simalarity(matrix_c, hyperedges_similarities)
