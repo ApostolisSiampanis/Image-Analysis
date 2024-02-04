@@ -1,3 +1,4 @@
+import math
 import matplotlib.pyplot as plt
 import numpy as np
 import random
@@ -69,7 +70,6 @@ def rank_normalization(similarity_lists):
     :param similarity_lists:
     :return:
     """
-
     normalized_similarity_scores = []
     L = len(similarity_lists[0])  # Length of each similarity list
 
@@ -107,30 +107,47 @@ def get_hypergraph_construction(similarity_scores, k=9):
 
 
 def create_edge_associations(hyperedges, k=9):
-    associations = np.zeros((len(hyperedges),len(hyperedges)))
-    for i,e in enumerate(hyperedges):
+    associations = np.zeros((len(hyperedges), len(hyperedges)))
+    for i, e in enumerate(hyperedges):
         for j in range(len(hyperedges)):
             if j in e:
-                position = e.index(j)+1 # Get the position of the node in the hyperedge
-                associations[i][j] = 1 - np.math.log(position, k+1) # Calculate the weight
+                position = e.index(j) + 1  # Get the position of the node in the hyperedge
+                associations[i][j] = 1 - math.log(position, k + 1)  # Calculate the weight
             else:
                 associations[i][j] = 0
     return associations
 
+
 def create_edge_weights(hyperedges, edge_associations):
     weights = []
-    for i,e in enumerate(hyperedges):
+    for i, e in enumerate(hyperedges):
         sum = 0
         for h in e:
             sum += edge_associations[i][h]
         weights.append(sum)
     return weights
 
+
 def get_hyperedges_similarities(incidence_matrix):
     Similarity_matrix_h = incidence_matrix @ incidence_matrix.T  # Matrix multiplication
     Similarity_matrix_u = incidence_matrix.T @ incidence_matrix  # Matrix multiplication
     Similarity_matrix = np.multiply(Similarity_matrix_h, Similarity_matrix_u)  # Hadamard product
     return Similarity_matrix
+
+
+def get_cartesian_product_of_hyperedge_elements(edge_weights, edge_associations, hyperedges):
+    membership_degrees = [{} for _ in range(len(hyperedges))]
+    matrix_c = np.zeros((len(hyperedges), len(hyperedges)))
+    for i, e in enumerate(hyperedges):
+        # eq_ei = np.transpose([np.tile(e, len(e)), np.repeat(e, len(e))])
+        eq_ei = np.transpose(np.meshgrid(e, e)).reshape(-1, 2)
+        for (vertices1, vertices2) in eq_ei:
+            membership_degrees[i][(vertices1, vertices2)] = edge_weights[i] * edge_associations[i][vertices1] * \
+                                                            edge_associations[i][vertices2]
+        for (vertices1, vertices2) in eq_ei:
+            matrix_c[vertices1][vertices2] += membership_degrees[i][(vertices1, vertices2)]
+    return matrix_c
+
 
 if __name__ == "__main__":
     print("Image Analysis: Final Exam")
@@ -203,3 +220,5 @@ if __name__ == "__main__":
 
     hyperedges_similarities = get_hyperedges_similarities(edge_associations)
     print(hyperedges_similarities)
+
+    matrix_c = get_cartesian_product_of_hyperedge_elements(edge_weights, edge_associations, hyperedges)
