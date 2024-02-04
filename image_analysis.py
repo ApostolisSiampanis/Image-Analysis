@@ -203,31 +203,60 @@ if __name__ == "__main__":
         features[i] = features[i].reshape(features[i].size)
 
     # ---LHRR Alogrithm---
+    number_of_iterations = 15
+    for i in range(number_of_iterations):
 
-    # Calculate the Euclidean distance between the features of an image and the features of all images and store the
-    # similarity scores
-    similarity_scores = calculate_similarity(features)
+        # Calculate the Euclidean distance between the features of an image and the features of all images and store the
+        # similarity scores
+        similarity_scores = calculate_similarity(features)
 
-    print(similarity_scores[0])
-    print("Length of the euclidean distances: ", len(similarity_scores))
+        print(similarity_scores[0])
+        print("Length of the euclidean distances: ", len(similarity_scores))
 
-    # Rank normalization of the similarity scores
-    normalized_similarity_scores = rank_normalization(similarity_scores)
-    print(normalized_similarity_scores[0])
+        # Rank normalization of the similarity scores
+        normalized_similarity_scores = rank_normalization(similarity_scores)
+        #print(normalized_similarity_scores[0])
 
-    # Get the Hyperedges
-    hyperedges = get_hypergraph_construction(normalized_similarity_scores)
-    print(hyperedges[0])
+        # Get the Hyperedges
+        hyperedges = get_hypergraph_construction(normalized_similarity_scores)
+        #print(hyperedges[0])
 
-    edge_associations = create_edge_associations(hyperedges)
-    print(edge_associations[0])
+        edge_associations = create_edge_associations(hyperedges)
+        #print(edge_associations[0])
 
-    edge_weights = create_edge_weights(hyperedges, edge_associations)
-    print(edge_weights[0])
+        edge_weights = create_edge_weights(hyperedges, edge_associations)
+        #print(edge_weights[0])
 
-    hyperedges_similarities = get_hyperedges_similarities(edge_associations)
-    print(hyperedges_similarities)
+        hyperedges_similarities = get_hyperedges_similarities(edge_associations)
+        #print(hyperedges_similarities)
 
-    matrix_c = get_cartesian_product_of_hyperedge_elements(edge_weights, edge_associations, hyperedges)
+        matrix_c = get_cartesian_product_of_hyperedge_elements(edge_weights, edge_associations, hyperedges)
 
-    affinity_matrix = get_hypergrapgh_based_simalarity(matrix_c, hyperedges_similarities)
+        affinity_matrix = get_hypergrapgh_based_simalarity(matrix_c, hyperedges_similarities)
+
+        affinity_matrix_list = affinity_matrix.tolist()
+
+        for i,row in enumerate(affinity_matrix_list):
+            for j,v in enumerate(row):
+                affinity_matrix_list[i][j] = (affinity_matrix_list[i][j], j)
+
+        similarity_scores = affinity_matrix_list
+        #print(similarity_scores)
+
+    query_image_index = 0
+    retrieved_images = []
+    for (score,i) in similarity_scores[query_image_index]:
+        if score != 0:
+            retrieved_images.append((i, score))
+    retrieved_images = sorted(retrieved_images, key=lambda x: x[1], reverse=True)
+    #print(retrieved_images)
+
+    for i in range(len(retrieved_images)):
+        image_index, score = retrieved_images[i]
+        image, _ = data_loader[image_index]
+        image = image.squeeze().permute(1, 2, 0).numpy()
+        plt.imshow(image)
+        plt.axis('off')
+        plt.show()
+
+    # Retrieved images accuracy
