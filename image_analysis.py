@@ -8,7 +8,7 @@ from torchvision import transforms, models
 from torchvision.datasets import ImageFolder
 
 
-def load_dataset(transform, limit=200, shuffle=True):
+def load_dataset(transform, limit=2000, shuffle=True):
     """
     Load Stanford Dogs dataset and preprocess the images with a specified limit
     http://vision.stanford.edu/aditya86/ImageNetDogs/
@@ -203,7 +203,7 @@ if __name__ == "__main__":
         features[i] = features[i].reshape(features[i].size)
 
     # ---LHRR Alogrithm---
-    number_of_iterations = 15
+    number_of_iterations = 1
     for i in range(number_of_iterations):
 
         # Calculate the Euclidean distance between the features of an image and the features of all images and store the
@@ -215,20 +215,15 @@ if __name__ == "__main__":
 
         # Rank normalization of the similarity scores
         normalized_similarity_scores = rank_normalization(similarity_scores)
-        #print(normalized_similarity_scores[0])
 
         # Get the Hyperedges
         hyperedges = get_hypergraph_construction(normalized_similarity_scores)
-        #print(hyperedges[0])
 
         edge_associations = create_edge_associations(hyperedges)
-        #print(edge_associations[0])
 
         edge_weights = create_edge_weights(hyperedges, edge_associations)
-        #print(edge_weights[0])
 
         hyperedges_similarities = get_hyperedges_similarities(edge_associations)
-        #print(hyperedges_similarities)
 
         matrix_c = get_cartesian_product_of_hyperedge_elements(edge_weights, edge_associations, hyperedges)
 
@@ -241,7 +236,6 @@ if __name__ == "__main__":
                 affinity_matrix_list[i][j] = (affinity_matrix_list[i][j], j)
 
         similarity_scores = affinity_matrix_list
-        #print(similarity_scores)
 
     query_image_index = 0
     retrieved_images = []
@@ -249,7 +243,9 @@ if __name__ == "__main__":
         if score != 0:
             retrieved_images.append((i, score))
     retrieved_images = sorted(retrieved_images, key=lambda x: x[1], reverse=True)
-    #print(retrieved_images)
+
+    # take the first 5 images
+    retrieved_images = retrieved_images[:5]
 
     for i in range(len(retrieved_images)):
         image_index, score = retrieved_images[i]
@@ -259,4 +255,17 @@ if __name__ == "__main__":
         plt.axis('off')
         plt.show()
 
-    # Retrieved images accuracy
+    # Retrieved images accuracy: the class of the query image is the same as the class of the retrieved images
+    query_image_label = data_loader[query_image_index][1]
+
+    count = 0
+    for i in range(len(retrieved_images)):
+        image_index, score = retrieved_images[i]
+        image, label = data_loader[image_index]
+        print("Image index: ", image_index, " | Image label: ", label, "| Score: ", score)
+        if label == query_image_label:
+            count += 1
+
+    accuracy = count / len(retrieved_images)
+    print("Accuracy: ", accuracy)
+
