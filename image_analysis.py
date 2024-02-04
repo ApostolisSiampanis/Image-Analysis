@@ -106,7 +106,7 @@ def get_hypergraph_construction(similarity_scores, k=9):
     return hyperedges
 
 
-def create_edge_association(hyperedges, k=9):
+def create_edge_associations(hyperedges, k=9):
     associations = np.zeros((len(hyperedges),len(hyperedges)))
     for i,e in enumerate(hyperedges):
         for j in range(len(hyperedges)):
@@ -126,6 +126,11 @@ def create_edge_weights(hyperedges, edge_associations):
         weights.append(sum)
     return weights
 
+def get_hyperedges_similarities(incidence_matrix):
+    Similarity_matrix_h = incidence_matrix @ incidence_matrix.T  # Matrix multiplication
+    Similarity_matrix_u = incidence_matrix.T @ incidence_matrix  # Matrix multiplication
+    Similarity_matrix = np.multiply(Similarity_matrix_h, Similarity_matrix_u)  # Hadamard product
+    return Similarity_matrix
 
 if __name__ == "__main__":
     print("Image Analysis: Final Exam")
@@ -190,8 +195,11 @@ if __name__ == "__main__":
     hyperedges = get_hypergraph_construction(normalized_similarity_scores)
     print(hyperedges[0])
 
-    edge_associations = create_edge_association(hyperedges)
+    edge_associations = create_edge_associations(hyperedges)
     print(edge_associations[0])
 
     edge_weights = create_edge_weights(hyperedges, edge_associations)
     print(edge_weights[0])
+
+    hyperedges_similarities = get_hyperedges_similarities(edge_associations)
+    print(hyperedges_similarities)
