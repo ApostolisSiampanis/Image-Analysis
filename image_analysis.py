@@ -51,7 +51,7 @@ def calculate_similarity(features_of_all_images):
 
     for i in range(len(features_of_all_images)):
         distances = np.linalg.norm(features_of_all_images - features_of_all_images[i], axis=1)
-        scores = 1 / np.where(distances == 0, 1, distances) # Avoid division by zero
+        scores = 1 / np.where(distances == 0, 1, distances)  # Avoid division by zero
         similarity_scores_list.append(list(enumerate(scores)))
 
     return similarity_scores_list
@@ -180,11 +180,15 @@ def get_hypergrapgh_based_simalarity(matrix_c, hyperedges_similarities):
     return affinity_matrix
 
 
-def show_image(image_index):
+def show_image(image_index, save_image=False, image_name=""):
     image, _ = data_loader[image_index]
     image = image.squeeze().permute(1, 2, 0).numpy()
     plt.imshow(image)
     plt.axis('off')
+    if save_image and image_name != "":
+        plt.savefig("retrieved_images/" + image_name + ".png")
+    elif save_image:
+        plt.savefig("retrieved_images/" + str(image_index) + ".png")
     plt.show()
 
 
@@ -282,11 +286,11 @@ if __name__ == "__main__":
             retrieved_images.append((i, score))
     retrieved_images = sorted(retrieved_images, key=lambda x: x[1], reverse=True)
 
-    # show the first 5 images
+    # Show the first 5 images
     retrieved_images = retrieved_images[:5]
     for i in range(len(retrieved_images)):
         image_index, score = retrieved_images[i]
-        show_image(i)
+        show_image(i, True, str(i))
 
     # Retrieved images accuracy: the class of the query image is the same as the class of the retrieved images
     query_image_label = data_loader[query_image_index][1]
