@@ -8,7 +8,7 @@ from torchvision import transforms, models
 from torchvision.datasets import ImageFolder
 
 
-def load_dataset(transform, limit=1000, shuffle=True):
+def load_dataset(transform, limit=400, shuffle=True):
     """
     Load Stanford Dogs dataset and preprocess the images with a specified limit
     http://vision.stanford.edu/aditya86/ImageNetDogs/
@@ -233,15 +233,16 @@ if __name__ == "__main__":
         features[i] = features[i].reshape(features[i].size)
 
     # ---LHRR Alogrithm---
-    number_of_iterations = 1
+
+    # Calculate the Euclidean distance between the features of an image and the features of all images and store the
+    # similarity scores
+    similarity_scores = calculate_similarity(features)
+
+    print(similarity_scores[0])
+    print("Length of the euclidean distances: ", len(similarity_scores))
+
+    number_of_iterations = 5
     for i in range(number_of_iterations):
-
-        # Calculate the Euclidean distance between the features of an image and the features of all images and store the
-        # similarity scores
-        similarity_scores = calculate_similarity(features)
-
-        print(similarity_scores[0])
-        print("Length of the euclidean distances: ", len(similarity_scores))
 
         # ---Rank Normalization---
         # Rank normalization of the similarity scores
@@ -274,14 +275,14 @@ if __name__ == "__main__":
 
         for i, row in enumerate(affinity_matrix_list):
             for j, v in enumerate(row):
-                affinity_matrix_list[i][j] = (affinity_matrix_list[i][j], j)
+                affinity_matrix_list[i][j] = (j, affinity_matrix_list[i][j])
 
         similarity_scores = affinity_matrix_list
 
     # Retrieve the images
     query_image_index = 0
     retrieved_images = []
-    for (score, i) in similarity_scores[query_image_index]:
+    for (i, score) in similarity_scores[query_image_index]:
         if score != 0:
             retrieved_images.append((i, score))
     retrieved_images = sorted(retrieved_images, key=lambda x: x[1], reverse=True)
