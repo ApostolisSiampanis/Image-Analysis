@@ -8,7 +8,7 @@ from torchvision import transforms, models
 from torchvision.datasets import ImageFolder
 
 
-def load_dataset(transform, limit=600, shuffle=False):
+def load_dataset(transform, limit=600, shuffle=True):
     """
     Load Stanford Dogs dataset and preprocess the images with a specified limit
     http://vision.stanford.edu/aditya86/ImageNetDogs/
@@ -140,6 +140,11 @@ def create_edge_weights(hyperedges, edge_associations):
 
 
 def get_hyperedges_similarities(incidence_matrix):
+    """
+    ---Hyperedges Similarities---
+
+    Compute the Hadamard product of the pairwise similary matrix
+    """
     Similarity_matrix_h = incidence_matrix @ incidence_matrix.T  # Matrix multiplication
     Similarity_matrix_u = incidence_matrix.T @ incidence_matrix  # Matrix multiplication
     Similarity_matrix = np.multiply(Similarity_matrix_h, Similarity_matrix_u)  # Hadamard product
@@ -147,10 +152,16 @@ def get_hyperedges_similarities(incidence_matrix):
 
 
 def get_cartesian_product_of_hyperedge_elements(edge_weights, edge_associations, hyperedges):
+    """
+    ---Cartesian Product of Hyperedge Elements---
+
+    Calculate cartesian product of the hyperedge elements.
+    Then calculate the membership degrees of the hyperedges based on weights.
+    Finally, calculate the matrix C.
+    """
     membership_degrees = [{} for _ in range(len(hyperedges))]
     matrix_c = np.zeros((len(hyperedges), len(hyperedges)))
     for i, e in enumerate(hyperedges):
-        # eq_ei = np.transpose([np.tile(e, len(e)), np.repeat(e, len(e))])
         eq_ei = np.transpose(np.meshgrid(e, e)).reshape(-1, 2)
         for (vertices1, vertices2) in eq_ei:
             membership_degrees[i][(vertices1, vertices2)] = edge_weights[i] * edge_associations[i][vertices1] * \
