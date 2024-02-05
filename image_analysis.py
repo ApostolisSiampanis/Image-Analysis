@@ -74,7 +74,6 @@ def rank_normalization(similarity_lists):
         # sort the ranks based on the rank (the second value of the tuple) and append to the
         # normalized_similarity_scores list
         normalized_similarity_scores.append(sorted(ranks, key=lambda x: x[1]))
-    print(normalized_similarity_scores[0])
 
     return normalized_similarity_scores
 
@@ -238,9 +237,6 @@ if __name__ == "__main__":
     # Calculate the Euclidean distance between the features of an image and the features of all images and store the
     # similarity scores
     similarity_scores = calculate_similarity(features)
-
-    print(similarity_scores[0])
-    print("Length of the euclidean distances: ", len(similarity_scores))
 
     number_of_iterations = 9 # The number of iterations
     for i in range(number_of_iterations):
