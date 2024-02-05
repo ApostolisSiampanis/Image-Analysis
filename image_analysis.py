@@ -155,7 +155,7 @@ def create_edge_weights(hyperedges, edge_associations):
     """
     ---Hyperedge Weight---
 
-
+    Calculate the weights of the hyperedges
     """
     weights = []
     for i, e in enumerate(hyperedges):
@@ -222,6 +222,9 @@ def show_image(image_index, save_image=False, image_name=""):
 
 
 def calculate_accuracy(retrieved_images, query_image_label):
+    """
+    Calculate the accuracy of the retrieved images
+    """
     count = 0
     for i in range(len(retrieved_images)):
         image_index, score = retrieved_images[i]
