@@ -12,6 +12,10 @@ def load_dataset(transform, limit=2000, shuffle=True):
     """
     Load Stanford Dogs dataset and preprocess the images with a specified limit
     http://vision.stanford.edu/aditya86/ImageNetDogs/
+
+    :param transform: the transformation to apply to the images
+    :param limit: the number of images to load
+    :param shuffle: whether to shuffle the images
     """
     dataset = ImageFolder('images_dataset', transform=transform)
     if shuffle:
@@ -25,7 +29,7 @@ def load_dataset(transform, limit=2000, shuffle=True):
 
 def load_pre_trained_model(select_device):
     """
-        Load the pre-trained model
+    Load the pre-trained model
     """
     model_set = models.resnet50(weights='IMAGENET1K_V1')
 
@@ -66,9 +70,9 @@ def calculate_similarity(features_of_all_images):
 
 def rank_normalization(similarity_lists):
     """
-    Rank normalization of the similarity scores
-    :param similarity_lists:
-    :return:
+    ---Rank Normalization---
+
+    Use similarity scores to sort
     """
     normalized_similarity_scores = []
     L = len(similarity_lists[0])  # Length of each similarity list
@@ -85,21 +89,28 @@ def rank_normalization(similarity_lists):
 
 
 def get_the_features_of_the_image(image, model):
+    """
+    ---Feature Extraction---
+
+    Get the features of the image
+    """
     image_tensor = transform_pipeline(image)
     features_var = model(image_tensor.unsqueeze(0).to(device))  # extract features
     features = features_var.data.cpu()  # get the tensor out of the variable and copy it to host memory
-
-    # print("Features of the image: ", features.size())
 
     return features
 
 
 def get_hypergraph_construction(similarity_scores, k=9):
+    """
+    ---Hypergraph Construction---
+
+    Create hyperedges as lists
+    """
     hyperedges = []
     for i in range(len(similarity_scores)):
         hyperedge = []
         for j in range(k):
-            # If it is, add the node to the hyperedge
             hyperedge.append(similarity_scores[i][j][0])
         # Add the hyperedge to the hyperedges
         hyperedges.append(hyperedge)
@@ -107,6 +118,11 @@ def get_hypergraph_construction(similarity_scores, k=9):
 
 
 def create_edge_associations(hyperedges, k=9):
+    """
+    ---Create Edge Associations---
+
+    Create edge associations based on the hyperedges
+    """
     associations = np.zeros((len(hyperedges), len(hyperedges)))
     for i, e in enumerate(hyperedges):
         for j in range(len(hyperedges)):
@@ -119,6 +135,11 @@ def create_edge_associations(hyperedges, k=9):
 
 
 def create_edge_weights(hyperedges, edge_associations):
+    """
+    ---Hyperedge Weight---
+
+
+    """
     weights = []
     for i, e in enumerate(hyperedges):
         sum = 0
@@ -150,6 +171,11 @@ def get_cartesian_product_of_hyperedge_elements(edge_weights, edge_associations,
 
 
 def get_hypergrapgh_based_simalarity(matrix_c, hyperedges_similarities):
+    """
+    ---Hypergraph-based similarity---
+
+    Computes final affinity matrix.
+    """
     affinity_matrix = np.multiply(matrix_c, hyperedges_similarities)
     return affinity_matrix
 
