@@ -9,7 +9,7 @@ from torchvision.datasets import ImageFolder
 import os
 
 
-def load_dataset(transform, limit=400, shuffle=True):
+def load_dataset(transform, limit=600, shuffle=True):
     """
     Load Stanford Dogs dataset and preprocess the images with a specified limit
     http://vision.stanford.edu/aditya86/ImageNetDogs/
@@ -40,6 +40,32 @@ def load_pre_trained_model(select_device):
     model_set.to(select_device)
 
     return model_set
+
+
+def calculate_features(dataset_images):
+    """
+    Calculate the features of the images using the pre-trained model
+    """
+    features_list = []
+    for ds_image, _ in dataset_images:
+        # Add batch dimension to image tensor
+        ds_image = ds_image.unsqueeze(0)
+
+        # Move the image tensor to the same device as the pre-trained model
+        ds_image = ds_image.to(device)
+
+        # Pass the image through the ResNet18 model
+        with torch.no_grad():
+            feature = pre_trained_model(ds_image).squeeze().cpu().numpy()  # Convert feature to numpy array
+
+        # Append the feature vector to the list of features
+        features_list.append(feature)
+
+    # Make them 1D
+    for i in range(len(features_list)):
+        features_list[i] = features_list[i].reshape(features_list[i].size)
+
+    return features_list
 
 
 def calculate_similarity(features_of_all_images):
@@ -195,6 +221,18 @@ def show_image(image_index, save_image=False, image_name=""):
     plt.show()
 
 
+def calculate_accuracy(retrieved_images, query_image_label):
+    count = 0
+    for i in range(len(retrieved_images)):
+        image_index, score = retrieved_images[i]
+        image, label = data_loader[image_index]
+        print("Image index: {:<5} | Image label: {:<5} | Score: {:.6f}".format(image_index, label, score))
+        if label == query_image_label:
+            count += 1
+
+    return (count / len(retrieved_images)) * 100
+
+
 if __name__ == "__main__":
     print("Image Analysis: Final Exam")
 
@@ -221,24 +259,7 @@ if __name__ == "__main__":
     show_image(0)
 
     # Get all the features of the images
-    features = []
-    for image, _ in data_loader:
-        # Add batch dimension to image tensor
-        image = image.unsqueeze(0)
-
-        # Move the image tensor to the same device as the pre-trained model
-        image = image.to(device)
-
-        # Pass the image through the ResNet18 model
-        with torch.no_grad():
-            feature = pre_trained_model(image).squeeze().cpu().numpy()  # Convert feature to numpy array
-
-        # Append the feature vector to the list of features
-        features.append(feature)
-
-    # Make them 1D
-    for i in range(len(features)):
-        features[i] = features[i].reshape(features[i].size)
+    features = calculate_features(data_loader)
 
     print("Extracted features: ", len(features), " features.")
 
@@ -332,13 +353,5 @@ if __name__ == "__main__":
     query_image_label = data_loader[query_image_index][1]
 
     # Calculate the accuracy
-    count = 0
-    for i in range(len(retrieved_images)):
-        image_index, score = retrieved_images[i]
-        image, label = data_loader[image_index]
-        print("Image index: {:<5} | Image label: {:<5} | Score: {:.6f}".format(image_index, label, score))
-        if label == query_image_label:
-            count += 1
-
-    accuracy = count / len(retrieved_images)
-    print("Accuracy: ", accuracy)
+    accuracy = calculate_accuracy(retrieved_images, query_image_label)
+    print(f"Accuracy: {accuracy}%")
