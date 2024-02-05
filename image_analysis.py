@@ -6,6 +6,7 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision import transforms, models
 from torchvision.datasets import ImageFolder
+import os
 
 
 def load_dataset(transform, limit=400, shuffle=True):
@@ -185,6 +186,8 @@ def show_image(image_index, save_image=False, image_name=""):
     image = image.squeeze().permute(1, 2, 0).numpy()
     plt.imshow(image)
     plt.axis('off')
+    if not os.path.exists("retrieved_images"):
+        os.makedirs("retrieved_images")
     if save_image and image_name != "":
         plt.savefig("retrieved_images/" + image_name + ".png")
     elif save_image:
@@ -202,12 +205,17 @@ if __name__ == "__main__":
     # Set the processing device
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+    print("Device: ", device)
+
     # Load the Stanford Dogs dataset
     data_loader = load_dataset(transform_pipeline)
 
+    print("Dataset size: ", len(data_loader))
+
     # Load the pre-trained model
     pre_trained_model = load_pre_trained_model(device)
-    # print(pre_trained_model)
+
+    # print("Pre-trained model: ", pre_trained_model)
 
     # Get the first image from the dataset
     show_image(0)
@@ -232,49 +240,75 @@ if __name__ == "__main__":
     for i in range(len(features)):
         features[i] = features[i].reshape(features[i].size)
 
+    print("Extracted features: ", len(features), " features.")
+
     # ---LHRR Alogrithm---
 
     # Calculate the Euclidean distance between the features of an image and the features of all images and store the
     # similarity scores
     similarity_scores = calculate_similarity(features)
 
-    number_of_iterations = 9 # The number of iterations
+    print("Similarity scores calculated.")
+
+    number_of_iterations = 9  # The number of iterations
+
+    print("Number of iterations: ", number_of_iterations)
+
     for i in range(number_of_iterations):
+
+        print("-----------Iteration: ", i + 1, "------------")
 
         # ---Rank Normalization---
         # Rank normalization of the similarity scores
         normalized_similarity_scores = rank_normalization(similarity_scores)
 
+        print("Rank normalization completed.")
+
         # ---Hypergraph Construction---
         # Get the Hyperedges
         hyperedges = get_hypergraph_construction(normalized_similarity_scores)
 
+        print("Hypergraph construction completed.")
+
         # Get the Edge Associations
         edge_associations = create_edge_associations(hyperedges)
 
+        print("Edge associations created.")
+
         # Get the Edge Weights
         edge_weights = create_edge_weights(hyperedges, edge_associations)
+
+        print("Edge weights created.")
 
         # ---Hyperedges Similarities---
         # Get the Hyperedges Similarities
         hyperedges_similarities = get_hyperedges_similarities(edge_associations)
 
+        print("Hyperedges similarities calculated.")
+
         # ---Cartesian Product of Hyperedge Elements---
         # Get the Cartesian Product of Hyperedge Elements
         matrix_c = get_cartesian_product_of_hyperedge_elements(edge_weights, edge_associations, hyperedges)
+
+        print("Cartesian product of hyperedge elements completed.")
 
         # ---Hypergraph-based similarity---
         # Get the Affinity Matrix
         affinity_matrix = get_hypergrapgh_based_simalarity(matrix_c, hyperedges_similarities)
 
+        print("Affinity matrix calculated.")
+
         # Convert the affinity matrix to a list
         affinity_matrix_list = affinity_matrix.tolist()
 
-        for i, row in enumerate(affinity_matrix_list):
+        for h, row in enumerate(affinity_matrix_list):
             for j, v in enumerate(row):
-                affinity_matrix_list[i][j] = (j, affinity_matrix_list[i][j])
+                affinity_matrix_list[h][j] = (j, affinity_matrix_list[h][j])
 
         similarity_scores = affinity_matrix_list
+
+        print("Similarity scores updated.")
+        print("------Iteration: ", i + 1, " completed.------")
 
     # Retrieve the images
     query_image_index = 0
@@ -284,11 +318,15 @@ if __name__ == "__main__":
             retrieved_images.append((i, score))
     retrieved_images = sorted(retrieved_images, key=lambda x: x[1], reverse=True)
 
+    print("Retrieved images: ", len(retrieved_images))
+
     # Show the first 5 images
     retrieved_images = retrieved_images[:5]
     for i in range(len(retrieved_images)):
         image_index, score = retrieved_images[i]
         show_image(image_index, True, str(i))
+
+    print("The top 5 retrieved images saved to the retrieved_images folder.")
 
     # Retrieved images accuracy: the class of the query image is the same as the class of the retrieved images
     query_image_label = data_loader[query_image_index][1]
@@ -298,7 +336,7 @@ if __name__ == "__main__":
     for i in range(len(retrieved_images)):
         image_index, score = retrieved_images[i]
         image, label = data_loader[image_index]
-        print("Image index: ", image_index, " | Image label: ", label, "| Score: ", score)
+        print("Image index: {:<5} | Image label: {:<5} | Score: {:.6f}".format(image_index, label, score))
         if label == query_image_label:
             count += 1
 
