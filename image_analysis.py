@@ -8,7 +8,7 @@ from torchvision import transforms, models
 from torchvision.datasets import ImageFolder
 
 
-def load_dataset(transform, limit=600, shuffle=True):
+def load_dataset(transform, limit=600, shuffle=False):
     """
     Load Stanford Dogs dataset and preprocess the images with a specified limit
     http://vision.stanford.edu/aditya86/ImageNetDogs/
@@ -290,7 +290,7 @@ if __name__ == "__main__":
     retrieved_images = retrieved_images[:5]
     for i in range(len(retrieved_images)):
         image_index, score = retrieved_images[i]
-        show_image(i, True, str(i))
+        show_image(image_index, True, str(i))
 
     # Retrieved images accuracy: the class of the query image is the same as the class of the retrieved images
     query_image_label = data_loader[query_image_index][1]
