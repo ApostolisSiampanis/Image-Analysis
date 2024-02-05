@@ -8,14 +8,10 @@ from torchvision import transforms, models
 from torchvision.datasets import ImageFolder
 
 
-def load_dataset(transform, limit=2000, shuffle=True):
+def load_dataset(transform, limit=600, shuffle=True):
     """
     Load Stanford Dogs dataset and preprocess the images with a specified limit
     http://vision.stanford.edu/aditya86/ImageNetDogs/
-
-    :param transform: the transformation to apply to the images
-    :param limit: the number of images to load
-    :param shuffle: whether to shuffle the images
     """
     dataset = ImageFolder('images_dataset', transform=transform)
     if shuffle:
@@ -165,7 +161,6 @@ def get_cartesian_product_of_hyperedge_elements(edge_weights, edge_associations,
         for (vertices1, vertices2) in eq_ei:
             membership_degrees[i][(vertices1, vertices2)] = edge_weights[i] * edge_associations[i][vertices1] * \
                                                             edge_associations[i][vertices2]
-        for (vertices1, vertices2) in eq_ei:
             matrix_c[vertices1][vertices2] += membership_degrees[i][(vertices1, vertices2)]
     return matrix_c
 
@@ -178,6 +173,13 @@ def get_hypergrapgh_based_simalarity(matrix_c, hyperedges_similarities):
     """
     affinity_matrix = np.multiply(matrix_c, hyperedges_similarities)
     return affinity_matrix
+
+def show_image(image_index):
+    image, _ = data_loader[image_index]
+    image = image.squeeze().permute(1, 2, 0).numpy()
+    plt.imshow(image)
+    plt.axis('off')
+    plt.show()
 
 
 if __name__ == "__main__":
@@ -198,15 +200,7 @@ if __name__ == "__main__":
     # print(pre_trained_model)
 
     # Get the first image from the dataset
-    first_image, _ = next(iter(data_loader))
-
-    # Convert the image tensor to a numpy array
-    first_image = first_image.squeeze().permute(1, 2, 0).numpy()
-
-    # Display the first image
-    plt.imshow(first_image)
-    plt.axis('off')
-    plt.show()
+    show_image(0)
 
     # Get all the features of the images
     features = []
@@ -275,11 +269,7 @@ if __name__ == "__main__":
 
     for i in range(len(retrieved_images)):
         image_index, score = retrieved_images[i]
-        image, _ = data_loader[image_index]
-        image = image.squeeze().permute(1, 2, 0).numpy()
-        plt.imshow(image)
-        plt.axis('off')
-        plt.show()
+        show_image(i)
 
     # Retrieved images accuracy: the class of the query image is the same as the class of the retrieved images
     query_image_label = data_loader[query_image_index][1]
@@ -294,4 +284,3 @@ if __name__ == "__main__":
 
     accuracy = count / len(retrieved_images)
     print("Accuracy: ", accuracy)
-
