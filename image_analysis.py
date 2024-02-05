@@ -74,6 +74,7 @@ def rank_normalization(similarity_lists):
         # sort the ranks based on the rank (the second value of the tuple) and append to the
         # normalized_similarity_scores list
         normalized_similarity_scores.append(sorted(ranks, key=lambda x: x[1]))
+    print(normalized_similarity_scores[0])
 
     return normalized_similarity_scores
 
@@ -91,7 +92,7 @@ def get_the_features_of_the_image(image, model):
     return features
 
 
-def get_hypergraph_construction(similarity_scores, k=9):
+def get_hypergraph_construction(similarity_scores, k=5):
     """
     ---Hypergraph Construction---
 
@@ -107,7 +108,7 @@ def get_hypergraph_construction(similarity_scores, k=9):
     return hyperedges
 
 
-def create_edge_associations(hyperedges, k=9):
+def create_edge_associations(hyperedges, k=5):
     """
     ---Create Edge Associations---
 
@@ -241,7 +242,7 @@ if __name__ == "__main__":
     print(similarity_scores[0])
     print("Length of the euclidean distances: ", len(similarity_scores))
 
-    number_of_iterations = 5
+    number_of_iterations = 9 # The number of iterations
     for i in range(number_of_iterations):
 
         # ---Rank Normalization---
