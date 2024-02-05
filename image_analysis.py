@@ -8,7 +8,7 @@ from torchvision import transforms, models
 from torchvision.datasets import ImageFolder
 
 
-def load_dataset(transform, limit=600, shuffle=True):
+def load_dataset(transform, limit=600, shuffle=False):
     """
     Load Stanford Dogs dataset and preprocess the images with a specified limit
     http://vision.stanford.edu/aditya86/ImageNetDogs/
@@ -32,10 +32,6 @@ def load_pre_trained_model(select_device):
     # Set the model to evaluation mode to avoid updating the running statistics of batch normalization layers
     model_set.eval()
 
-    # Freeze the parameters
-    for param in model_set.parameters():
-        param.requires_grad = False
-
     # Remove the classification (fully connected) layer
     model_set = torch.nn.Sequential(*(list(model_set.children())[:-1]))
 
@@ -50,17 +46,14 @@ def calculate_similarity(features_of_all_images):
     Calculate the similarity scores between images based on the inverse Euclidean distance of their features.
     Similarity score = 1 / (Euclidean distance)
     """
+    features_of_all_images = np.array(features_of_all_images)
     similarity_scores_list = []
+
     for i in range(len(features_of_all_images)):
-        scores = []
-        for j in range(len(features_of_all_images)):
-            distance = np.linalg.norm(features_of_all_images[i] - features_of_all_images[j])
-            if distance == 0:
-                score = 1
-            else:
-                score = 1 / distance
-            scores.append((j, score))
-        similarity_scores_list.append(scores)
+        distances = np.linalg.norm(features_of_all_images - features_of_all_images[i], axis=1)
+        scores = 1 / np.where(distances == 0, 1, distances) # Avoid division by zero
+        similarity_scores_list.append(list(enumerate(scores)))
+
     return similarity_scores_list
 
 
@@ -77,8 +70,9 @@ def rank_normalization(similarity_lists):
         ranks = []
         for j in range(len(similarity_lists[i])):
             rank = 2 * L - (similarity_lists[i][j][1] + similarity_lists[j][i][1])
-            ranks.append((j, rank))  # Append a tuple instead of a list
-        # sort the ranks based on the rank (the second value of the tuple) and append to the normalized_similarity_scores list
+            ranks.append((j, rank))
+        # sort the ranks based on the rank (the second value of the tuple) and append to the
+        # normalized_similarity_scores list
         normalized_similarity_scores.append(sorted(ranks, key=lambda x: x[1]))
 
     return normalized_similarity_scores
@@ -174,6 +168,7 @@ def get_hypergrapgh_based_simalarity(matrix_c, hyperedges_similarities):
     affinity_matrix = np.multiply(matrix_c, hyperedges_similarities)
     return affinity_matrix
 
+
 def show_image(image_index):
     image, _ = data_loader[image_index]
     image = image.squeeze().permute(1, 2, 0).numpy()
@@ -251,15 +246,15 @@ if __name__ == "__main__":
 
         affinity_matrix_list = affinity_matrix.tolist()
 
-        for i,row in enumerate(affinity_matrix_list):
-            for j,v in enumerate(row):
+        for i, row in enumerate(affinity_matrix_list):
+            for j, v in enumerate(row):
                 affinity_matrix_list[i][j] = (affinity_matrix_list[i][j], j)
 
         similarity_scores = affinity_matrix_list
 
     query_image_index = 0
     retrieved_images = []
-    for (score,i) in similarity_scores[query_image_index]:
+    for (score, i) in similarity_scores[query_image_index]:
         if score != 0:
             retrieved_images.append((i, score))
     retrieved_images = sorted(retrieved_images, key=lambda x: x[1], reverse=True)
