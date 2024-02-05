@@ -239,22 +239,33 @@ if __name__ == "__main__":
         print(similarity_scores[0])
         print("Length of the euclidean distances: ", len(similarity_scores))
 
+        # ---Rank Normalization---
         # Rank normalization of the similarity scores
         normalized_similarity_scores = rank_normalization(similarity_scores)
 
+        # ---Hypergraph Construction---
         # Get the Hyperedges
         hyperedges = get_hypergraph_construction(normalized_similarity_scores)
 
+        # Get the Edge Associations
         edge_associations = create_edge_associations(hyperedges)
 
+        # Get the Edge Weights
         edge_weights = create_edge_weights(hyperedges, edge_associations)
 
+        # ---Hyperedges Similarities---
+        # Get the Hyperedges Similarities
         hyperedges_similarities = get_hyperedges_similarities(edge_associations)
 
+        # ---Cartesian Product of Hyperedge Elements---
+        # Get the Cartesian Product of Hyperedge Elements
         matrix_c = get_cartesian_product_of_hyperedge_elements(edge_weights, edge_associations, hyperedges)
 
+        # ---Hypergraph-based similarity---
+        # Get the Affinity Matrix
         affinity_matrix = get_hypergrapgh_based_simalarity(matrix_c, hyperedges_similarities)
 
+        # Convert the affinity matrix to a list
         affinity_matrix_list = affinity_matrix.tolist()
 
         for i, row in enumerate(affinity_matrix_list):
@@ -263,6 +274,7 @@ if __name__ == "__main__":
 
         similarity_scores = affinity_matrix_list
 
+    # Retrieve the images
     query_image_index = 0
     retrieved_images = []
     for (score, i) in similarity_scores[query_image_index]:
@@ -270,9 +282,8 @@ if __name__ == "__main__":
             retrieved_images.append((i, score))
     retrieved_images = sorted(retrieved_images, key=lambda x: x[1], reverse=True)
 
-    # take the first 5 images
+    # show the first 5 images
     retrieved_images = retrieved_images[:5]
-
     for i in range(len(retrieved_images)):
         image_index, score = retrieved_images[i]
         show_image(i)
@@ -280,6 +291,7 @@ if __name__ == "__main__":
     # Retrieved images accuracy: the class of the query image is the same as the class of the retrieved images
     query_image_label = data_loader[query_image_index][1]
 
+    # Calculate the accuracy
     count = 0
     for i in range(len(retrieved_images)):
         image_index, score = retrieved_images[i]
