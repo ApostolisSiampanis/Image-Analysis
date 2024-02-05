@@ -8,7 +8,7 @@ from torchvision import transforms, models
 from torchvision.datasets import ImageFolder
 
 
-def load_dataset(transform, limit=600, shuffle=False):
+def load_dataset(transform, limit=1000, shuffle=True):
     """
     Load Stanford Dogs dataset and preprocess the images with a specified limit
     http://vision.stanford.edu/aditya86/ImageNetDogs/
@@ -51,7 +51,7 @@ def calculate_similarity(features_of_all_images):
 
     for i in range(len(features_of_all_images)):
         distances = np.linalg.norm(features_of_all_images - features_of_all_images[i], axis=1)
-        scores = 1 / np.where(distances == 0, 1, distances)  # Avoid division by zero
+        scores = 1 / np.where(distances == 0, 0.00001, distances)  # Avoid division by zero
         similarity_scores_list.append(list(enumerate(scores)))
 
     return similarity_scores_list
