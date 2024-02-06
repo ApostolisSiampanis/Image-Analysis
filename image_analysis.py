@@ -54,7 +54,7 @@ def calculate_features(dataset_images):
         # Move the image tensor to the same device as the pre-trained model
         ds_image = ds_image.to(device)
 
-        # Pass the image through the ResNet18 model
+        # Pass the image through the ResNet50 model
         with torch.no_grad():
             feature = pre_trained_model(ds_image).squeeze().cpu().numpy()  # Convert feature to numpy array
 
