@@ -65,11 +65,11 @@ The script from the `image_analysis.py` will compute the hypergraph-based simila
 
 **Retrieved Pictures:**
 
-![Retrieved Picture 1](.images/retrieved_image_1.png)
-![Retrieved Picture 2](.images/retrieved_image_2.png)
-![Retrieved Picture 3](.images/retrieved_image_3.png)
-![Retrieved Picture 4](.images/retrieved_image_4.png)
-![Retrieved Picture 5](.images/retrieved_image_5.png)
+![Retrieved Image 1](./images/retrieved_image_1.png)
+![Retrieved Image 2](./images/retrieved_image_2.png)
+![Retrieved Image 3](./images/retrieved_image_3.png)
+![Retrieved Image 4](./images/retrieved_image_4.png)
+![Retrieved Image 5](./images/retrieved_image_5.png)
 
 
 ## Setup Instructions
@@ -80,7 +80,16 @@ The script from the `image_analysis.py` will compute the hypergraph-based simila
 
     Follow the usage example to execute the script.
 
+## Contributors
 
+<table>
+  <tr>
+    <td align="center"><a href="https://github.com/thkox"><img src="https://avatars.githubusercontent.com/u/79880468?v=4" width="100px;" alt="Theodoros Koxanoglou"/><br /><sub><b>Theodoros Koxanoglou</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/ApostolisSiampanis"><img src="https://avatars.githubusercontent.com/u/75365398?v=4" width="100px;" alt="Apostolis Siampanis"/><br /><sub><b>Apostolis Siampanis</b></sub></a><br /></td>
+    <td align="center"><a href="https://github.com/AlexanderCholis"><img src="https://avatars.githubusercontent.com/u/66769337?v=4" width="100px;" alt="Alexander Cholis
+"/><br /><sub><b>Alexander Cholis</b></sub></a><br /></td>
+  </tr>
+</table>
 
 ## License
 
