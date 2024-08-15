@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This project is a team assignment for the "Image Analysis" course, offered in the 7th semester of the 2023 academic year at the University of Piraeus, Department of Informatics. The project focuses on developing graph-theoretical algorithms for content-based image retrieval, based on the methodology outlined in the paper “Multimedia Retrieval through Unsupervised Hypergraph-based Manifold Ranking” (IEEE TRANSACTIONS ON IMAGE PROCESSING, VOL. 28, NO. 12, DECEMBER 2019). The project is divided into five main tasks:
+This project is a team assignment for the "Image Analysis" course, offered in the 7th semester of the 2023 academic year at the University of Piraeus, Department of Informatics. The project focuses on developing graph-theoretical algorithms for content-based image retrieval, based on the methodology outlined in the paper “![Multimedia Retrieval through Unsupervised Hypergraph-based Manifold Ranking](https://github.com/thkox/Image-Analysis/blob/main/docs/IEEE-TIP_2019-AcceptedVersion.pdf)” (IEEE TRANSACTIONS ON IMAGE PROCESSING, VOL. 28, NO. 12, DECEMBER 2019). The project is divided into five main tasks:
 
 1. **Rank Normalization**: Implement a method to normalize ranking sequences, improving the symmetry of the neighborhood sets in the image retrieval process.
 
